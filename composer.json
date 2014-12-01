@@ -16,7 +16,7 @@
     ],
     "require": {
         "yiisoft/yii2": "*",
-        "exeu/apai-io": "dev-master"
+        "exeu/apai-io": "@dev"
     },
     "autoload": {
         "psr-4": {
