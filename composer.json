@@ -1,17 +1,18 @@
 {
-    "name": "nirvana-msu/yii2-amazon-product-api",
-    "description": "Yii2 extension for Amazon Product Advertising API",
+    "name": "nirvana-msu/yii2-amazon-widgets",
+    "description": "Yii2 extension for Amazon Widgets",
     "keywords": [
         "yii2",
         "amazon",
-        "advertising",
-        "ecs"
+        "widget",
+        "IPToAmazon",
+        "product link"
     ],
     "type": "yii2-extension",
     "license": "MIT",
     "support": {
-        "issues": "https://github.com/nirvana-msu/yii2-amazon-product-api/issues",
-        "source": "https://github.com/nirvana-msu/yii2-amazon-product-api"
+        "issues": "https://github.com/nirvana-msu/yii2-amazon-widgets/issues",
+        "source": "https://github.com/nirvana-msu/yii2-amazon-widgets"
     },
     "authors": [
         {

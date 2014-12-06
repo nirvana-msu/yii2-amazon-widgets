@@ -11,7 +11,7 @@ use yii\base\Object;
  *
  * @license      MIT
  * @author       Alexander Stepanov <student_vmk@mail.ru>
- * @link         https://github.com/nirvana-msu/yii2-amazon-product-api
+ * @link         https://github.com/nirvana-msu/yii2-amazon-widgets
  * IPToAmazon    IPToAmazon created by Stephen Morley
  * @link         http://code.stephenmorley.org/php/mapping-visitor-ip-addresses-to-amazon-sites/
  */

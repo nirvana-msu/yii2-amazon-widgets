@@ -1,6 +1,6 @@
-yii2-amazon-product-api
+yii2-amazon-widgets
 =======================
 
-Yii2 extension for Amazon Product Advertising API, built on top of [Exeu/apai-io](https://github.com/Exeu/apai-io). Additionally provides the ability to resolve ip address into preferred amazon site and create widgets.
+Yii2 extension for Amazon Widgets. Additionally provides the ability to resolve IP Address into preferred amazon country.
 
-Coming soon.
+Examples are coming soon.
