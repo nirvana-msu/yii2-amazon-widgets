@@ -1,7 +1,12 @@
 {
     "name": "nirvana-msu/yii2-amazon-product-api",
     "description": "Yii2 extension for Amazon Product Advertising API",
-    "keywords": ["yii2", "amazon", "advertising", "ecs"],
+    "keywords": [
+        "yii2",
+        "amazon",
+        "advertising",
+        "ecs"
+    ],
     "type": "yii2-extension",
     "license": "MIT",
     "support": {
@@ -15,8 +20,7 @@
         }
     ],
     "require": {
-        "yiisoft/yii2": "*",
-        "exeu/apai-io": "@dev"
+        "yiisoft/yii2": "*"
     },
     "autoload": {
         "psr-4": {
