@@ -115,25 +115,19 @@ class AmazonStatic extends Object
     }
 
     /**
-     * @param array $config
-     */
-    public function __construct($config = [])
-    {
-        // Default database path. Can be overridden through $config
-        self::$databasePath = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'IPToAmazon.data';
-
-        // If an IP address is not specified through $config, use the visitor's IP address
-        self::$ipAddress = $_SERVER['REMOTE_ADDR'];
-
-        parent::__construct($config);
-    }
-
-    /**
      * Resolves IP Address to most relevant Amazon Country and provides Match Type
      * @return array most relevant Amazon Country and Match Type
      */
     public static function IPToAmazon()
     {
+        if (!isset(self::$databasePath)) {  // Default to IPToAmazon.data database
+            self::$databasePath = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'IPToAmazon.data';
+        }
+
+        if (!isset(self::$ipAddress)) {  // Default to visitor's IP Address
+            self::$ipAddress = $_SERVER['REMOTE_ADDR'];
+        }
+
         // throw an error if the database is missing
         if (!is_file(self::$databasePath)) {
             trigger_error('Database path is invalid',
@@ -180,9 +174,10 @@ class AmazonStatic extends Object
         // close the database
         fclose($database);
 
-        // store the country and match type
-        $amazon['country'] = ord($data) >> 2;
-        $amazon['matchType'] = ord($data) & 3;
-        return $amazon;
+        // return country and match type
+        return [
+            'country' => ord($data) >> 2,
+            'matchType' => ord($data) & 3
+        ];
     }
 }
