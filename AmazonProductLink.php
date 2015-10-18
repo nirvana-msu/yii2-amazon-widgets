@@ -1,69 +1,102 @@
 <?php
+/**
+ * @link https://github.com/nirvana-msu/yii2-amazon-widgets
+ * @copyright Copyright (c) 2015 Alexander Stepanov
+ * @license MIT
+ */
 
 namespace nirvana\amazon;
 
 use yii\base\InvalidConfigException;
 use yii\base\Widget;
 
+/**
+ * Renders iframe widget with Amazon Product Link.
+ *
+ * @author Alexander Stepanov <student_vmk@mail.ru>
+ */
 class AmazonProductLink extends Widget
 {
-    /**
-     * @var string Associate Tag
-     */
-    public $associateTag;
+    // Constants for old template price options
+    const PRICE_OPTION_SHOW_ALL_PRICES = 'Show All Prices';
+    const PRICE_OPTION_SHOW_NEW_PRICES_ONLY = 'Show New Prices Only';   // Not supported by IT and ES
+    const PRICE_OPTION_HIDE_PRICES = 'Hide Prices';
 
     /**
-     * @var string foreground color
+     * Required. Used by both old and new templates.
+     * @var array ASINs to display. If multiple are specified, amazon will render one at random
      */
-    public $foreground = '000000';
+    public $asins = [];
 
     /**
-     * @var string background color
+     * Required. Used by both old and new templates.
+     * @var integer one of country constants defined in AmazonStatic
      */
-    public $background = 'FFFFFF';
+    public $country;
 
     /**
-     * @var string border color
+     * Required. Used by both old and new templates.
+     * @var string Tracking ID, valid in a given country
      */
-    public $bordercolor = 'FFFFFF';
+    public $trackingId;
 
     /**
-     * @var string link color
-     */
-    public $linkcolor = '0000FF';
-
-    /**
-     * @var string how to display prices
-     */
-    public $priceDisplay = 'showAllPrices';
-
-    /**
+     * Used by both old and new templates.
      * @var boolean whether to open link in a new window
      */
     public $openLinkInNewWindow = true;
 
     /**
-     * @var boolean whether to use a larger image
+     * Used by both old and new templates.
+     * @var boolean whether to show border
+     */
+    public $showBorder = true;
+
+    /**
+     * Used by both old and new templates.
+     * @var string background color
+     */
+    public $backgroundColor = 'FFFFFF';
+
+    /**
+     * Used by new template only.
+     * @var string title color
+     */
+    public $titleColor = '0066C0';
+
+    /**
+     * Used by new template only.
+     * @var string price color
+     */
+    public $priceColor = '333333';
+
+    /**
+     * Used by old template only.
+     * @var boolean whether to use larger image
      */
     public $useLargerImage = true;
 
     /**
-     * @var array ASINs to display
+     * Used by old template only.
+     * @var string price display option
      */
-    public $asins = array();
+    public $priceOption = self::PRICE_OPTION_SHOW_ALL_PRICES;
 
     /**
-     * @var int Amazon Country
+     * Used by old template only.
+     * @var string text color
      */
-    public $country = AmazonStatic::AMAZON_COM;
-
-    private $AMAZON_PRODUCT_LINK_TEMPLATE = '<iframe src="http://{{RCM}}/e/cm?t={{associateTag}}&o={{mplaceId}}&p=8&l=as1&asins={{asins}}&fc1={{foreground}}{{useLargerImage}}&lt1={{openLinkInNewWindow}}&m=amazon&lc1={{linkcolor}}&bc1={{bordercolor}}&bg1={{background}}&f=ifr{{priceDisplay}}" style="width:120px;height:240px;" scrolling="no" marginwidth="0" marginheight="0" frameborder="0"></iframe>';
+    public $textColor = '000000';
 
     /**
-     * All possible price display options
-     * @var array
+     * Used by old template only.
+     * @var string link color
      */
-    private $possiblePriceDisplayOptions = array('showAllPrices', 'showNewPricesOnly', 'hidePrices');
+    public $linkColor = '0000FF';
+
+    // Templates
+    private $TEMPLATE_NEW = '<iframe style="width:120px;height:240px;" marginwidth="0" marginheight="0" scrolling="no" frameborder="0" src="//{{rcm}}/widgets/q?ServiceVersion=20070822&OneJS=1&Operation=GetAdHtml&MarketPlace={{mplace}}&ad_type=product_link&tracking_id={{tracking_id}}&marketplace=amazon&region={{mplace}}&placement={{asins}}&asins={{asins}}&linkId=&show_border={{show_border}}&link_opens_in_new_window={{link_opens_in_new_window}}&price_color={{price_color}}&title_color={{title_color}}&bg_color={{bg_color}}"></iframe>';
+    private $TEMPLATE_OLD = '<iframe src="http://{{rcm}}/e/cm?t={{tracking_id}}&o={{mplace_id}}&p=8&l=as1&asins={{asins}}&fc1={{fc1}}{{IS}}&lt1={{lt1}}&m=amazon&lc1={{lc1}}&bc1={{bc1}}&bg1={{bg1}}&f=ifr{{price_option}}" style="width:120px;height:240px;" scrolling="no" marginwidth="0" marginheight="0" frameborder="0"></iframe>';
 
     /**
      * Initializes the widget
@@ -80,43 +113,57 @@ class AmazonProductLink extends Widget
      */
     public function run()
     {
-        $params = array(
-            'RCM' => AmazonStatic::getCountryData($this->country, 'rcm'),
-            'mplaceId' => AmazonStatic::getCountryData($this->country, 'mplace_id'),
-            'associateTag' => $this->associateTag,
-            'asins' => implode(',', $this->asins),
-            'foreground' => $this->foreground,
-            'linkcolor' => $this->linkcolor,
-            'bordercolor' => $this->bordercolor,
-            'background' => $this->background,
-        );
+        $newTemplateCountries = [AmazonStatic::AMAZON_US, AmazonStatic::AMAZON_GB, AmazonStatic::AMAZON_DE, AmazonStatic::AMAZON_FR];
+        $oldTemplateCountries = [AmazonStatic::AMAZON_CA, AmazonStatic::AMAZON_IT, AmazonStatic::AMAZON_ES];
 
-        switch ($this->priceDisplay) {
-            case 'showAllPrices':
-                $params['priceDisplay'] = '';
-                break;
-            case 'showNewPricesOnly':
-                $params['priceDisplay'] = '&nou=1';
-                break;
-            case 'hidePrices':
-                $params['priceDisplay'] = '&npa=1';
-                break;
+        if (in_array($this->country, $newTemplateCountries)) {
+            $template = $this->TEMPLATE_NEW;
+
+            $params = [
+                'rcm' => AmazonStatic::getCountryData($this->country, 'rcm'),
+                'mplace' => AmazonStatic::getCountryData($this->country, 'mplace'),
+                'tracking_id' => $this->trackingId,
+                'asins' => implode(',', $this->asins),
+                'link_opens_in_new_window' => $this->openLinkInNewWindow ? 'true' : 'false',
+                'show_border' => $this->showBorder ? 'true' : 'false',
+                'bg_color' => $this->backgroundColor,
+                'title_color' => $this->titleColor,
+                'price_color' => $this->priceColor,
+            ];
+        } elseif (in_array($this->country, $oldTemplateCountries)) {
+            $template = $this->TEMPLATE_OLD;
+
+            $priceOption = '';  // Corresponds to self::PRICE_OPTION_SHOW_ALL_PRICES
+            switch ($this->priceOption) {
+                case self::PRICE_OPTION_SHOW_NEW_PRICES_ONLY:
+                    $priceOption = '&nou=1';
+                    break;
+                case self::PRICE_OPTION_HIDE_PRICES:
+                    $priceOption = '&npa=1';
+                    break;
+            }
+
+            $params = [
+                'rcm' => AmazonStatic::getCountryData($this->country, 'rcm'),
+                'mplace_id' => AmazonStatic::getCountryData($this->country, 'mplace_id'),
+                'tracking_id' => $this->trackingId,
+                'asins' => implode(',', $this->asins),
+                'lt1' => $this->openLinkInNewWindow ? '_blank' : '_top',
+                'bc1' => $this->showBorder ? '000000' : 'FFFFFF',
+                'IS' => $this->useLargerImage ? '&IS2=1' : '&IS1=1',
+                'price_option' => $priceOption,
+                'bg1' => $this->backgroundColor,
+                'fc1' => $this->textColor,
+                'lc1' => $this->linkColor,
+            ];
+        } else {
+            throw new InvalidConfigException("Product Link widget does not support a given Amazon locale yet!");
         }
-
-        if ($this->openLinkInNewWindow)
-            $params['openLinkInNewWindow'] = '_blank';
-        else
-            $params['openLinkInNewWindow'] = '_top';
-
-        if ($this->useLargerImage)
-            $params['useLargerImage'] = '&IS2=1';
-        else
-            $params['useLargerImage'] = '&IS1=1';
 
         $keys = array_map(function ($p) {
             return '{{' . $p . '}}';
         }, array_keys($params));
-        $html = str_replace($keys, array_values($params), $this->AMAZON_PRODUCT_LINK_TEMPLATE);
+        $html = str_replace($keys, array_values($params), $template);
 
         echo $html;
     }
@@ -127,12 +174,22 @@ class AmazonProductLink extends Widget
      */
     private function validate()
     {
-        if (false === in_array($this->priceDisplay, $this->possiblePriceDisplayOptions)) {
-            throw new InvalidConfigException(sprintf(
-                "Invalid price display option: %s! Possible options: %s",
-                $this->priceDisplay,
-                implode(', ', $this->possiblePriceDisplayOptions)
-            ));
+        if (empty($this->asins)) {
+            throw new InvalidConfigException("Please specify item ASIN(s)!");
+        }
+
+        $validCountries = AmazonStatic::getValidCountries();
+        if (!in_array($this->country, $validCountries)) {
+            throw new InvalidConfigException("Please specify Amazon locale using constants defined in AmazonStatic class!");
+        }
+
+        if (empty($this->trackingId)) {
+            throw new InvalidConfigException("Please specify Tracking ID!");
+        }
+
+        $validPriceDisplayOptions = [self::PRICE_OPTION_SHOW_ALL_PRICES, self::PRICE_OPTION_SHOW_NEW_PRICES_ONLY, self::PRICE_OPTION_HIDE_PRICES];
+        if (!in_array($this->priceOption, $validPriceDisplayOptions)) {
+            throw new InvalidConfigException(sprintf("Invalid price display option: %s!", $this->priceOption));
         }
     }
 }
